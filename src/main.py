@@ -31,7 +31,7 @@ nltk.download('wordnet')
 from nltk import *
 import re
 from PyQt5 import QtCore
-
+import time
 
 class TextEditor(QMainWindow):
     def __init__(self):
@@ -59,8 +59,11 @@ class TextEditor(QMainWindow):
         self.clear_button.clicked.connect(self.clear_text)
 
     def process_text(self):
+        start_time = time.time()
         text = self.text_edit.toPlainText()
         self.analyze_text(text)
+        elapsed_time = time.time() - start_time
+        print(f"Elapsed time: {elapsed_time} seconds")
 
     def analyze_text(self, text):
         try:
