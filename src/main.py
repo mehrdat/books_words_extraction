@@ -1,17 +1,13 @@
 # books_words_extraction
-
 import csv
 import sys
 import os
 
 from PyQt5.QtWidgets import QApplication, QMainWindow,QTableView, QTextEdit, QPushButton, QFileDialog, QVBoxLayout
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableView, QVBoxLayout, QWidget
-from PyQt5.QtCore import QAbstractTableModel,Qt, QModelIndex
-from PySide6.QtCore import QAbstractTableModel
 
 import pdfplumber
 import ebooklib
-from ebooklib import epub
+from ebooklib import epub   
 from reportlab.pdfgen import canvas
 from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
@@ -126,7 +122,7 @@ class TextEditor(QMainWindow):
             # Lemmatize words
             lemmatizer = WordNetLemmatizer()
             tokens = [lemmatizer.lemmatize(token) for token in tokens]
-            #tokens = [lemmatizer.lemmatize(word, get_wordnet_pos(pos)) for word, pos in pos_tag(tokens)]
+
             # Remove common words from open file
             tokens = remove_special_tokens(tokens)
 
@@ -141,22 +137,6 @@ class TextEditor(QMainWindow):
             
             from google_trans_new import google_translator  
             translator = google_translator()  
-            # Translate words using PyDictionary
-            #dictionary = PyDictionary()
-            #translations = {}
-            #for word in word_counts.keys():
-            #    translation = dictionary.meaning(word, disable_errors=True)
-            #    if translation:
-            #        translations[word] = translation\
-            #from googletrans import Translator
-            #translator = Translator(service_urls=['translate.googleapis.com'])
-            #translations = {}
-            #for word in word_counts.keys():
-            #    result = translator.translate(word, src='en', dest='fa').text
-            #    translation = translator.translate(word,lang_tgt='fa') 
-            #    if translation:
-            #        translations[word] = translation
-
 
             from deep_translator import GoogleTranslator
             
@@ -166,48 +146,18 @@ class TextEditor(QMainWindow):
                 translation=GoogleTranslator(source='auto', target='fa').translate(word)
                 if translation:
                     translations[word] = translation
-                    
-                    
-                    
-            #    if result:
-            #        translations[word] = result.text
-                    
-            #pip install google_trans_new
 
-            #from google_trans_new import google_translator  
-            #translator = google_translator()  
-            #translate_text = translator.translate(word,lang_tgt='fa')  
-
-            # Create a DataFrame with word, frequency, and meaning columns
-            
             df = pd.DataFrame(columns=['word', 'frequency', 'meaning'])
 
             for word, frequency in word_counts.items():
                 meaning = translations.get(word, '')
                 df.loc[len(df)] = [word, frequency, meaning]
         
-        
-
-            # # Display the DataFrame in a QTableView
-            # table_view = QTableView(self)
-            # table_view.setGeometry(10, 10, 480, 400)
-            # model = PandasModel(df)
-            # table_view.setModel(model)
-            # self.centralWidget = QWidget()
-            # self.setCentralWidget(self.centralWidget)
-            # self.layout = QVBoxLayout(self.centralWidget)
-            # self.tableView = QTableView(self)
-
-            # #self.model = PandasModel(dataframe)
-            # self.tableView.setModel(self.model)
-            # self.layout.addWidget(self.tableView)
-
-
             
             self.text_edit.setPlainText(df.to_string(index=False))
             
             # Hide the text edit
-            #self.text_edit.hide()
+            
             self.process_button.setDisabled(True)
             #self.tableView.show()
             self.load_button.show()
