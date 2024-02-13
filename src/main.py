@@ -4,10 +4,12 @@ import sys
 import os
 
 from PyQt5.QtWidgets import QApplication, QMainWindow,QTableView, QTextEdit, QPushButton, QFileDialog, QVBoxLayout
-
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableView, QVBoxLayout, QWidget
+from PyQt5.QtCore import QAbstractTableModel,Qt, QModelIndex
+from PySide6.QtCore import QAbstractTableModel
 import pdfplumber
 import ebooklib
-from ebooklib import epub   
+from ebooklib import epub
 from reportlab.pdfgen import canvas
 from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
@@ -17,14 +19,11 @@ from nltk import pos_tag
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-
+from deep_translator import GoogleTranslator
 from nltk.tag import pos_tag
 import PyDictionary
 from PyDictionary import PyDictionary
 import pandas as pd
-
-
-
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
@@ -105,55 +104,25 @@ class TextEditor(QMainWindow):
             tagged_tokens = pos_tag(tokens)
             
             tags_to_exclude = ['NNP', 'NNPS','DT', 'CC','CD','EX','IN','JJS','LS','MD','POS','PRP','PRP$','RBR','SYM','UH','WDT', 'WP', 'WP$',  'TO']
-            
-            def get_wordnet_pos(tag):
-                if tag.startswith('J'):
-                    return wordnet.ADJ
-                elif tag.startswith('V'):
-                    return wordnet.VERB
-                elif tag.startswith('N'):
-                    return wordnet.NOUN
-                elif tag.startswith('R'):
-                    return wordnet.ADV
-                else:
-                    return wordnet.NOUN
 
             tokens = [token for token, pos in tagged_tokens if pos not in tags_to_exclude]
             # Lemmatize words
             lemmatizer = WordNetLemmatizer()
             tokens = [lemmatizer.lemmatize(token) for token in tokens]
-
             # Remove common words from open file
             tokens = remove_special_tokens(tokens)
 
             # Count the frequency of uncommon words
-            word_counts = {}
-            for token in tokens:
-                if token not in word_counts:
-                    word_counts[token] = 1
-                else:
-                    word_counts[token] += 1
-
-            from deep_translator import GoogleTranslator
-            
-            translations = {}
-            for word in word_counts.keys():
-            
-                translation=GoogleTranslator(source='auto', target='fa').translate(word)
-                if translation:
-                    translations[word] = translation
-
-            df = pd.DataFrame(columns=['word', 'frequency', 'meaning'])
-
-            for word, frequency in word_counts.items():
-                meaning = translations.get(word, '')
-                df.loc[len(df)] = [word, frequency, meaning]
-        
+            word_counts = self.word_count(tokens)
+                    
+                    
+            # Translate the words to Persian
+            df = self.translate_counted_words(word_counts)
             
             self.text_edit.setPlainText(df.to_string(index=False))
             
             # Hide the text edit
-            
+            #self.text_edit.hide()
             self.process_button.setDisabled(True)
             #self.tableView.show()
             self.load_button.show()
@@ -162,7 +131,6 @@ class TextEditor(QMainWindow):
             self.clear_button.setEnabled(True)
             self.save_button.setEnabled(True)
             self.load_button.setEnabled(True)
-            
             
             #self.save_table_data(self.tableView)
             
@@ -174,8 +142,28 @@ class TextEditor(QMainWindow):
             print(f"An error occurred: {type(e).__name__} occured : {e}")
             
             self.text_edit.setPlainText(df.to_string(index=False))
+
+    def translate_counted_words(self, word_counts):
+        translations = {}
+        for word in word_counts.keys():
+            translation=GoogleTranslator(source='auto', target='fa').translate(word)
+            if translation:
+                translations[word] = translation
+        df = pd.DataFrame(columns=['word', 'frequency', 'meaning'])
+        for word, frequency in word_counts.items():
+            meaning = translations.get(word, '')
+            df.loc[len(df)] = [word, frequency, meaning]
+        return df
+
+    def word_count(self, tokens):
+        word_counts = {}
+        for token in tokens:
+            if token not in word_counts:
+                word_counts[token] = 1
+            else:
+                word_counts[token] += 1
+        return word_counts
             #return df
-            
             
         
     def save_text_data(self, text_edit):
