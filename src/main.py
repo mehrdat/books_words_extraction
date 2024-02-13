@@ -133,10 +133,6 @@ class TextEditor(QMainWindow):
                     word_counts[token] = 1
                 else:
                     word_counts[token] += 1
-            
-            
-            from google_trans_new import google_translator  
-            translator = google_translator()  
 
             from deep_translator import GoogleTranslator
             
