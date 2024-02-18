@@ -1,4 +1,6 @@
 # books_words_extraction
+import cProfile
+from gensim.models import TfidfModel
 import csv
 import sys
 import os
@@ -21,8 +23,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from deep_translator import GoogleTranslator
 from nltk.tag import pos_tag
-import PyDictionary
-from PyDictionary import PyDictionary
+from nltk.tokenize import word_tokenize, sent_tokenize
 import pandas as pd
 nltk.download('stopwords')
 nltk.download('punkt')
@@ -139,12 +140,12 @@ class TextEditor(QMainWindow):
             stop_words = set(stopwords.words("english"))
             tokens = [token for token in tokens if token not in stop_words]
 
-            tokens = [token for token in tokens if not re.match(r'^https?:\/\/.*[\r\n]*', token)]
+            
             # Remove numbers
             #tokens = [token for token in tokens if not token.isdigit()]
             tokens = [token for token in tokens if token.isalpha()]
             # Remove addresses
-            tokens = [token for token in tokens if not re.match(r'\d+.*\d+', token)]
+            
             
             #Remove special characters
             tokens = [re.sub(r'[^\w\s]', '', token) for token in tokens]
@@ -168,17 +169,21 @@ class TextEditor(QMainWindow):
             lemmatizer = WordNetLemmatizer()
             tokens = [lemmatizer.lemmatize(token) for token in tokens]
             #####lemmatized = [lemmatizer.lemmatize(t) for t in no_stops]
-            # Remove common words from open file
-            #tokens = remove_special_tokens(tokens)
 
-
-# Remove websites
-            
 
             # Count the frequency of uncommon words
             #word_counts = self.word_count(tokens)
             word_counts = Counter(tokens)
-                    
+            corpus=sent_tokenize(text)
+            
+            tfidf = TfidfModel(corpus=corpus)
+
+            # # Calculate the tfidf weights of doc: tfidf_weights
+            tfidf_weights = tfidf[tokens]
+
+            # # Print the first five weights
+            self.text_edit.setPlainText(str(tfidf_weights))
+            #print(tfidf_weights)        
                     
             # Translate the words to Persian
             df = self.translate_counted_words(word_counts)
@@ -315,4 +320,3 @@ if __name__ == "__main__":
     editor = TextEditor()
     editor.show()
     sys.exit(app.exec_())
-    
