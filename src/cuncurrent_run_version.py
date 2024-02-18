@@ -33,6 +33,7 @@ import re
 from PyQt5 import QtCore
 import time
 from concurrent.futures import ThreadPoolExecutor
+from collections import Counter
 
 class WorkerSignals(QObject):
     finished = pyqtSignal()
@@ -102,6 +103,9 @@ class TextEditor(QMainWindow):
 
     def analyze_text(self, text):
         try:
+            
+            
+            
             def remove_special_tokens(tokens):
                 
                 # Remove websites
@@ -111,9 +115,6 @@ class TextEditor(QMainWindow):
                 tokens = [token for token in tokens if token.isalpha()]
                 # Remove addresses
                 tokens = [token for token in tokens if not re.match(r'\d+.*\d+', token)]
-                # Remove company names (replace with your own list of company names)
-                company_names = ["Microsoft", "Google", "Apple"]
-                tokens = [token for token in tokens if token not in company_names]
                 
                 #Remove special characters
                 tokens = [re.sub(r'[^\w\s]', '', token) for token in tokens]
@@ -132,11 +133,35 @@ class TextEditor(QMainWindow):
             # Tokenize the input text
             if not isinstance(text, str):
                 raise ValueError("Input text must be a string")
-            tokens = word_tokenize(text)
+            tokens = word_tokenize(text.lower())
 
             # Remove stop words
             stop_words = set(stopwords.words("english"))
-            tokens = [token for token in tokens if token.lower() not in stop_words]
+            tokens = [token for token in tokens if token not in stop_words]
+
+            tokens = [token for token in tokens if not re.match(r'^https?:\/\/.*[\r\n]*', token)]
+            # Remove numbers
+            #tokens = [token for token in tokens if not token.isdigit()]
+            tokens = [token for token in tokens if token.isalpha()]
+            # Remove addresses
+            tokens = [token for token in tokens if not re.match(r'\d+.*\d+', token)]
+            
+            #Remove special characters
+            tokens = [re.sub(r'[^\w\s]', '', token) for token in tokens]
+            
+            # Remove common words
+            # # Get the directory of the current script
+            current_dir = os.path.dirname(__file__)
+            # # Build the path to the resource file
+            resource_path = os.path.join(current_dir, 'resources', '10kwords.txt')
+            with open(resource_path, "r") as file:
+                common_words = file.read().splitlines()
+            tokens = [token for token in tokens if token.lower() not in common_words]
+
+
+
+
+
 
             # Remove names
             tagged_tokens = pos_tag(tokens)
@@ -147,11 +172,17 @@ class TextEditor(QMainWindow):
             # Lemmatize words
             lemmatizer = WordNetLemmatizer()
             tokens = [lemmatizer.lemmatize(token) for token in tokens]
+            #####lemmatized = [lemmatizer.lemmatize(t) for t in no_stops]
             # Remove common words from open file
-            tokens = remove_special_tokens(tokens)
+            #tokens = remove_special_tokens(tokens)
+
+
+# Remove websites
+            
 
             # Count the frequency of uncommon words
-            word_counts = self.word_count(tokens)
+            #word_counts = self.word_count(tokens)
+            word_counts = Counter(tokens)
                     
                     
             # Translate the words to Persian
@@ -194,14 +225,14 @@ class TextEditor(QMainWindow):
             df.loc[len(df)] = [word, frequency, meaning]
         return df
 
-    def word_count(self, tokens):
-        word_counts = {}
-        for token in tokens:
-            if token not in word_counts:
-                word_counts[token] = 1
-            else:
-                word_counts[token] += 1
-        return word_counts
+    # def word_count(self, tokens):
+    #     word_counts = {}
+    #     for token in tokens:
+    #         if token not in word_counts:
+    #             word_counts[token] = 1
+    #         else:
+    #             word_counts[token] += 1
+    #     return word_counts
             #return df
                 
     def save_text_data(self, text_edit):
