@@ -158,11 +158,6 @@ class TextEditor(QMainWindow):
                 common_words = file.read().splitlines()
             tokens = [token for token in tokens if token.lower() not in common_words]
 
-
-
-
-
-
             # Remove names
             tagged_tokens = pos_tag(tokens)
             
