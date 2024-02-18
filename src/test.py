@@ -133,51 +133,60 @@ class TextEditor(QMainWindow):
                 return tokens
             
             
-            # nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])  # Load spaCy model, disable unnecessary components for speed
-
-            # def preprocess(text):
-            #     doc = nlp(text)
-            #     lemmatized = [token.lemma_.lower() for token in doc if not token.is_stop and not token.is_punct and token.is_alpha]
-            #     return " ".join(lemmatized)
+            
             # Tokenize the input text
             if not isinstance(text, str):
                 raise ValueError("Input text must be a string")
-            tokens = word_tokenize(text.lower())
+            #tokens = word_tokenize(text.lower())
+
+
+            nlp = spacy.load("en_core_web_sm")  # Load spaCy model, disable unnecessary components for speed
+
+            def spacy_preprocess(text):
+                doc = nlp(text)
+                lemmatized = [token.lemma_.lower() for token in doc if not token.is_stop and not token.is_punct and token.is_alpha]
+                return lemmatized
+
+
+
+
+
 
             # Remove stop words
-            stop_words = set(stopwords.words("english"))
-            tokens = [token for token in tokens if token not in stop_words]
+            # stop_words = set(stopwords.words("english"))
+            # tokens = [token for token in tokens if token not in stop_words]
+            
 
+            # # Remove numbers
+            # #tokens = [token for token in tokens if not token.isdigit()]
+            # tokens = [token for token in tokens if token.isalpha()]
+            # # Remove addresses
             
-            # Remove numbers
-            #tokens = [token for token in tokens if not token.isdigit()]
-            tokens = [token for token in tokens if token.isalpha()]
-            # Remove addresses
+            # #Remove special characters
+            # tokens = [re.sub(r'[^\w\s]', '', token) for token in tokens]
             
-            
-            #Remove special characters
-            tokens = [re.sub(r'[^\w\s]', '', token) for token in tokens]
-            
-            # Remove common words
-            # # Get the directory of the current script
-            current_dir = os.path.dirname(__file__)
-            # # Build the path to the resource file
-            resource_path = os.path.join(current_dir, 'resources', '10kwords.txt')
-            with open(resource_path, "r") as file:
-                common_words = file.read().splitlines()
-            tokens = [token for token in tokens if token.lower() not in common_words]
+            # # Remove common words
+            # # # Get the directory of the current script
+            # current_dir = os.path.dirname(__file__)
+            # # # Build the path to the resource file
+            # resource_path = os.path.join(current_dir, 'resources', '10kwords.txt')
+            # with open(resource_path, "r") as file:
+            #     common_words = file.read().splitlines()
+            # tokens = [token for token in tokens if token.lower() not in common_words]
 
-            # Remove names
-            tagged_tokens = pos_tag(tokens)
+            # # Remove names
+            # tagged_tokens = pos_tag(tokens)
             
-            tags_to_exclude = ['NNP', 'NNPS','DT', 'CC','CD','EX','IN','JJS','LS','MD','POS','PRP','PRP$','RBR','SYM','UH','WDT', 'WP', 'WP$',  'TO']
+            # tags_to_exclude = ['NNP', 'NNPS','DT', 'CC','CD','EX','IN','JJS','LS','MD','POS','PRP','PRP$','RBR','SYM','UH','WDT', 'WP', 'WP$',  'TO']
 
-            tokens = [token for token, pos in tagged_tokens if pos not in tags_to_exclude]
-            # Lemmatize words
-            lemmatizer = WordNetLemmatizer()
-            tokens = [lemmatizer.lemmatize(token) for token in tokens]
-            #####lemmatized = [lemmatizer.lemmatize(t) for t in no_stops]
-
+            # tokens = [token for token, pos in tagged_tokens if pos not in tags_to_exclude]
+            # # Lemmatize words
+            # lemmatizer = WordNetLemmatizer()
+            # tokens = [lemmatizer.lemmatize(token) for token in tokens]
+            # #####lemmatized = [lemmatizer.lemmatize(t) for t in no_stops]
+            
+            # # Remove special tokens
+            tokens=spacy_preprocess(text)
 
             # Count the frequency of uncommon words
             #word_counts = self.word_count(tokens)
@@ -196,7 +205,6 @@ class TextEditor(QMainWindow):
             # Translate the words to Persian
             df = self.translate_counted_words(word_counts)
             
-            df=df.sort_values(by='frequency', ascending=False)
             self.text_edit.setPlainText(df.to_string(index=False))
             
             # Hide the text edit
@@ -226,9 +234,8 @@ class TextEditor(QMainWindow):
         translations = {}
         for word in word_counts.keys():
             translation=GoogleTranslator(source='auto', target='fa').translate(word)
-            if translation and wordnet.synsets(translation):
+            if translation:
                 translations[word] = translation
-                
         df = pd.DataFrame(columns=['word', 'frequency', 'meaning'])
         for word, frequency in word_counts.items():
             meaning = translations.get(word, '')
