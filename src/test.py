@@ -149,7 +149,7 @@ class TextEditor(QMainWindow):
 
 
 
-
+            tokens=spacy_preprocess(text)
 
 
             # Remove stop words
@@ -167,12 +167,12 @@ class TextEditor(QMainWindow):
             
             # # Remove common words
             # # # Get the directory of the current script
-            # current_dir = os.path.dirname(__file__)
+            current_dir = os.path.dirname(__file__)
             # # # Build the path to the resource file
-            # resource_path = os.path.join(current_dir, 'resources', '10kwords.txt')
-            # with open(resource_path, "r") as file:
-            #     common_words = file.read().splitlines()
-            # tokens = [token for token in tokens if token.lower() not in common_words]
+            resource_path = os.path.join(current_dir, 'resources', '10kwords.txt')
+            with open(resource_path, "r") as file:
+                common_words = file.read().splitlines()
+            tokens = [token for token in tokens if token.lower() not in common_words]
 
             # # Remove names
             # tagged_tokens = pos_tag(tokens)
@@ -186,7 +186,7 @@ class TextEditor(QMainWindow):
             # #####lemmatized = [lemmatizer.lemmatize(t) for t in no_stops]
             
             # # Remove special tokens
-            tokens=spacy_preprocess(text)
+            
 
             # Count the frequency of uncommon words
             #word_counts = self.word_count(tokens)

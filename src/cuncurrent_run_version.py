@@ -1,5 +1,6 @@
 # books_words_extraction
 import cProfile
+import pstats
 import spacy 
 from gensim.models import TfidfModel
 import csv
@@ -226,7 +227,7 @@ class TextEditor(QMainWindow):
         translations = {}
         for word in word_counts.keys():
             translation=GoogleTranslator(source='auto', target='fa').translate(word)
-            if translation and wordnet.synsets(translation):
+            if translation:
                 translations[word] = translation
                 
         df = pd.DataFrame(columns=['word', 'frequency', 'meaning'])
@@ -326,7 +327,16 @@ class TextEditor(QMainWindow):
         word, frequency, translation = result
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    editor = TextEditor()
-    editor.show()
-    sys.exit(app.exec_())
+    with cProfile.Profile() as pr:
+        app = QApplication(sys.argv)
+        editor = TextEditor()
+        editor.show()
+        
+        res=pstats.Stats(pr)
+        res.sort_stats(pstats.SortKey.TIME)
+        res.print_stats()
+        sys.exit(app.exec_())
+    # app = QApplication(sys.argv)
+    # editor = TextEditor()
+    # editor.show()
+    # sys.exit(app.exec_())
