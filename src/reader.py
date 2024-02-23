@@ -37,8 +37,9 @@ class MainWindow(QMainWindow):
         self.text=""
         self.cleaned=[]
         self.cleaned_10k=[]
-        self.tf_idf=[]
+        self.tf_idf=pd.DataFrame()
         self.counted_words=Counter()
+        self.words=pd.DataFrame()
         self.translations=[]
         self.setWindowTitle("Reader")
         self.setGeometry(200, 175, 800, 400)
@@ -147,16 +148,19 @@ class MainWindow(QMainWindow):
         vector=tf.fit_transform([' '.join(self.cleaned_10k)])
         
         self.tf_idf=pd.DataFrame(vector.toarray(),columns=tf.get_feature_names_out())
-        self.tf_idf.columns = ['word', 'weight']
-        #df_tfidf = pd.DataFrame({'word': tf.get_feature_names_out(), 'weight': tf.T.sort_values(by=0, ascending=False)[0].values})
+        self.tf_idf = self.tf_idf.transpose().reset_index().rename(columns={'index': 'word'}).iloc[1:].reset_index(drop=True).rename(columns={0: 'TF_IDF'})
 
+        #self.tf_idf = pd.DataFrame({'word': tf.get_feature_names_out(), 'weight': tf.iloc[:, ::-1].sort_values(by=0, ascending=False)[0].values})
+        #self.tf_idf=self.tf_idf.T
         #self.tf_idf=pd.DataFrame({word: tf.idf_[tf.vocabulary_.get(word)] for word in tf.get_feature_names_out()})
         
         #self.tf_idf=pd.DataFrame({'vecotr' :vector.toarray(),'word':tf.get_feature_names_out() } )
         
         #self.tf_idf=self.tf_idf.T
-        
-        self.tf_idf=self.tf_idf.sum().sort_values(ascending=False)
+        #self.tf_idf = self.tf_idf.iloc[:, ::-1]
+
+        #self.tf_idf=self.tf_idf.sum().sort_values(ascending=False)
+        #self.tf_idf.columns = ['word', 'weight']
         self.tf_idf.to_csv("tf.csv")
         self.text_area.clear()
         print(self.tf_idf)
@@ -165,28 +169,42 @@ class MainWindow(QMainWindow):
     def count_word(self):
         """ returns the count of the words in the text"""
         # Add your code here
-        self.counted_words=Counter(self.tf_idf.iloc[:,0])
+        self.counted_words=Counter(self.text.split())
     def translate(self):
         """ returns the translation of the text"""
         #self.count_word(self)
         
-        self.counted_words=Counter(self.tf_idf.iloc[:,0])
-        print(self.counted_words)
+        #self.counted_words=Counter(self.tf_idf.iloc[:,0])
+        #print(self.counted_words[:20])
         
         # Using googletrans library
         translator = Translator(service_urls=['translate.google.com'])
         # translations_googletrans = [translator.translate(word, dest='fa').text for word,_ in t.items()]
-        translations_googletrans=translations = {word: translator.translate(word, dest='fa').text for word,_ in self.counted_words.most_common() }
         
-        self.translations = pd.DataFrame(columns=['word', 'frequency', 'meaning'])
-        for word, frequency in self.counted_words.most_common():
-            meaning = translations.get(word, '')
-            self.translations.loc[len(self.translations)] = [word, frequency, meaning]
+        def translate_word(word):
+            translation = translator.translate(word, dest='fa')
+            return translation.text
+
+# Apply translation to each word in the dataframe
+        self.tf_idf['translated_word'] = self.tf_idf['word'].apply(translate_word)
+
+    
+        # we need to translate the tfidf words
+        #translations_googletrans=translations = {word: translator.translate(word, dest='fa').text for word,_ in self.counted_words.most_common() }
+        
+        
+        
+        #translations_googletrans=translations = {word: translator.translate(word, dest='fa').text for word,_ in self.counted_words.most_common() }
+        
+        # self.translations = pd.DataFrame(columns=['word', 'frequency', 'meaning'])
+        # for word, frequency in self.counted_words.most_common():
+        #     meaning = translations.get(word, '')
+        #     self.translations.loc[len(self.translations)] = [word, frequency, meaning]
         
         
         self.text_area.clear()
-        print(self.translations)
-        self.text_area.append(self.translations.to_string())
+        print(self.tf_idf['translated_word'].head(20))
+        self.text_area.append(self.tf_idf.to_string())
         
         
     def has_meaning(self,token):
