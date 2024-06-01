@@ -1,5 +1,8 @@
 # books_words_extraction
 import cProfile
+import ebooklib
+from ebooklib import epub
+from bs4 import BeautifulSoup
 import spacy 
 from gensim.models import TfidfModel
 import csv
@@ -112,6 +115,7 @@ class TextEditor(QMainWindow):
                 
                 # Remove websites
                 tokens = [token for token in tokens if not re.match(r'^https?:\/\/.*[\r\n]*', token)]
+                #token= re.sub(r'\d+','')
                 # Remove numbers
                 tokens = [token for token in tokens if not token.isdigit()]
                 tokens = [token for token in tokens if token.isalpha()]
@@ -282,12 +286,19 @@ class TextEditor(QMainWindow):
                         text += page.extract_text()
                     self.text_edit.setPlainText(text)
             elif file_path.endswith(".epub"):
+                paragraphs=[]
+                
                 book = epub.read_epub(file_path)
                 text = ""
                 for item in book.get_items():
                     if item.get_type() == ebooklib.ITEM_DOCUMENT:
-                        text += item.get_content().decode("utf-8")
-                self.text_edit.setPlainText(text)
+                        soup=BeautifulSoup(item.get_content(),'html.parser')
+                        p_tags=soup.find_all('p')
+                        for tag in p_tags:
+                            paragraphs.append(tag.text)
+                            self.text_edit.setPlainText(tag.text)
+                        #text += item.get_content().decode("utf-8")
+                #self.text_edit.setPlainText(text)
             else:
                 with open(file_path, "r") as file:
                     self.text_edit.setPlainText(file.read())
