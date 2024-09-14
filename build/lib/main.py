@@ -6,7 +6,7 @@ import os
 from PyQt5.QtWidgets import QApplication, QMainWindow,QTableView, QTextEdit, QPushButton, QFileDialog, QVBoxLayout
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableView, QVBoxLayout, QWidget
 from PyQt5.QtCore import QAbstractTableModel,Qt, QModelIndex
-#from PySide6.QtCore import QAbstractTableModel
+from PySide6.QtCore import QAbstractTableModel
 import pdfplumber
 import ebooklib
 from ebooklib import epub

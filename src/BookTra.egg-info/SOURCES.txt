@@ -1,0 +1,14 @@
+MANIFEST.in
+README.md
+setup.py
+src/__init__.py
+src/cuncurrent_run_version.py
+src/main.py
+src/reader.py
+src/test.py
+src/BookTra.egg-info/PKG-INFO
+src/BookTra.egg-info/SOURCES.txt
+src/BookTra.egg-info/dependency_links.txt
+src/BookTra.egg-info/requires.txt
+src/BookTra.egg-info/top_level.txt
+src/tests/__init__.py
